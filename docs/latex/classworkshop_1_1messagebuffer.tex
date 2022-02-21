@@ -1,0 +1,64 @@
+\hypertarget{classworkshop_1_1messagebuffer}{}\doxysection{workshop\+::messagebuffer\texorpdfstring{$<$}{<} T \texorpdfstring{$>$}{>} Class Template Reference}
+\label{classworkshop_1_1messagebuffer}\index{workshop::messagebuffer$<$ T $>$@{workshop::messagebuffer$<$ T $>$}}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classworkshop_1_1messagebuffer_a01b7eaab052a9c7dcef565021fa3a32e}\label{classworkshop_1_1messagebuffer_a01b7eaab052a9c7dcef565021fa3a32e}} 
+{\bfseries messagebuffer} (size\+\_\+t capacity)
+\item 
+\mbox{\Hypertarget{classworkshop_1_1messagebuffer_a78d0fb6fdb0a02f60fc45cfcac676864}\label{classworkshop_1_1messagebuffer_a78d0fb6fdb0a02f60fc45cfcac676864}} 
+std\+::optional$<$ T $>$ {\bfseries read} ()
+\item 
+\mbox{\Hypertarget{classworkshop_1_1messagebuffer_a7bd54687bdf8561051f57df61a9f836e}\label{classworkshop_1_1messagebuffer_a7bd54687bdf8561051f57df61a9f836e}} 
+void {\bfseries write} (T message)
+\item 
+\mbox{\Hypertarget{classworkshop_1_1messagebuffer_a7660648aa7e622fe1ee7f7691c710781}\label{classworkshop_1_1messagebuffer_a7660648aa7e622fe1ee7f7691c710781}} 
+bool {\bfseries write} (T message, duration timeout)
+\item 
+\mbox{\Hypertarget{classworkshop_1_1messagebuffer_a985906b1cf803ec90c295f03457de411}\label{classworkshop_1_1messagebuffer_a985906b1cf803ec90c295f03457de411}} 
+std\+::optional$<$ T $>$ {\bfseries read} (duration timeout)
+\item 
+\mbox{\Hypertarget{classworkshop_1_1messagebuffer_a26a4b4dcfc039cab69134ad0388b650e}\label{classworkshop_1_1messagebuffer_a26a4b4dcfc039cab69134ad0388b650e}} 
+size\+\_\+t {\bfseries size} () const
+\item 
+\mbox{\Hypertarget{classworkshop_1_1messagebuffer_a70d84b897df67ea282798f3e172310f5}\label{classworkshop_1_1messagebuffer_a70d84b897df67ea282798f3e172310f5}} 
+bool {\bfseries empty} () const
+\item 
+bool \mbox{\hyperlink{classworkshop_1_1messagebuffer_acfa8b5ee8793568b096c455b52c0ad1c}{full}} () const
+\item 
+\mbox{\Hypertarget{classworkshop_1_1messagebuffer_a51d9af4637a5603b566593cbb1863595}\label{classworkshop_1_1messagebuffer_a51d9af4637a5603b566593cbb1863595}} 
+void {\bfseries wait\+Until\+Empty} ()
+\item 
+void \mbox{\hyperlink{classworkshop_1_1messagebuffer_a36b0d7c4f1b0cfbe3badecd9dbf06320}{unblock}} ()
+\item 
+\mbox{\Hypertarget{classworkshop_1_1messagebuffer_ad0f5d50fc433d81c2c686d947ac77a19}\label{classworkshop_1_1messagebuffer_ad0f5d50fc433d81c2c686d947ac77a19}} 
+{\bfseries messagebuffer} (\mbox{\hyperlink{classworkshop_1_1messagebuffer}{messagebuffer}}$<$ T $>$ \&\&mb)
+\item 
+\mbox{\Hypertarget{classworkshop_1_1messagebuffer_a041c0be6beceb81944dde6c1a422591c}\label{classworkshop_1_1messagebuffer_a041c0be6beceb81944dde6c1a422591c}} 
+{\bfseries messagebuffer} (const \mbox{\hyperlink{classworkshop_1_1messagebuffer}{messagebuffer}}$<$ T $>$ \&mb)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classworkshop_1_1messagebuffer_acfa8b5ee8793568b096c455b52c0ad1c}\label{classworkshop_1_1messagebuffer_acfa8b5ee8793568b096c455b52c0ad1c}} 
+\index{workshop::messagebuffer$<$ T $>$@{workshop::messagebuffer$<$ T $>$}!full@{full}}
+\index{full@{full}!workshop::messagebuffer$<$ T $>$@{workshop::messagebuffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{full()}{full()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+bool \mbox{\hyperlink{classworkshop_1_1messagebuffer}{workshop\+::messagebuffer}}$<$ T $>$\+::full (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\begin{DoxyReturn}{Returns}
+whether the buffer is full. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classworkshop_1_1messagebuffer_a36b0d7c4f1b0cfbe3badecd9dbf06320}\label{classworkshop_1_1messagebuffer_a36b0d7c4f1b0cfbe3badecd9dbf06320}} 
+\index{workshop::messagebuffer$<$ T $>$@{workshop::messagebuffer$<$ T $>$}!unblock@{unblock}}
+\index{unblock@{unblock}!workshop::messagebuffer$<$ T $>$@{workshop::messagebuffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{unblock()}{unblock()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void \mbox{\hyperlink{classworkshop_1_1messagebuffer}{workshop\+::messagebuffer}}$<$ T $>$\+::unblock (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Unblock any blocking read operation. This does not include timeout read. 
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+include/concurrency/messagebuffer.\+h\end{DoxyCompactItemize}

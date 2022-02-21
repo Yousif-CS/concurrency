@@ -1,0 +1,105 @@
+\hypertarget{workerthread_8h_source}{}\doxysection{workerthread.\+h}
+\label{workerthread_8h_source}\index{include/concurrency/workerthread.h@{include/concurrency/workerthread.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{comment}{/* *}}
+\DoxyCodeLine{2 \textcolor{comment}{ * workerthread; a thread that executes tasks posted in order.}}
+\DoxyCodeLine{3 \textcolor{comment}{ * Created by Yousif on Feb 13th 2022.}}
+\DoxyCodeLine{4 \textcolor{comment}{ * */}}
+\DoxyCodeLine{5 }
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#pragma once}}
+\DoxyCodeLine{7 }
+\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <thread>}}
+\DoxyCodeLine{9 \textcolor{preprocessor}{\#include <tuple>}}
+\DoxyCodeLine{10 \textcolor{preprocessor}{\#include <utility>}}
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#include <atomic>}}
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#include <chrono>}}
+\DoxyCodeLine{13 \textcolor{preprocessor}{\#include <vector>}}
+\DoxyCodeLine{14 \textcolor{preprocessor}{\#include <algorithm>}}
+\DoxyCodeLine{15 }
+\DoxyCodeLine{16 \textcolor{preprocessor}{\#include "{}messagebuffer.h"{}}}
+\DoxyCodeLine{17 }
+\DoxyCodeLine{18 }
+\DoxyCodeLine{19 \textcolor{keyword}{namespace }workshop \{}
+\DoxyCodeLine{20 }
+\DoxyCodeLine{21     \textcolor{keyword}{using namespace }std::chrono\_literals;}
+\DoxyCodeLine{22 }
+\DoxyCodeLine{23     \textcolor{keyword}{template} <\textcolor{keyword}{typename} Task, \textcolor{keyword}{typename}... Args>}
+\DoxyCodeLine{24     \textcolor{keyword}{class }\mbox{\hyperlink{classworkshop_1_1workerthread}{workerthread}} \{}
+\DoxyCodeLine{25     \textcolor{keyword}{public}:}
+\DoxyCodeLine{26 }
+\DoxyCodeLine{32         \textcolor{keyword}{explicit} \mbox{\hyperlink{classworkshop_1_1workerthread_ad3ef58ec12a15302256367ebbe0829aa}{workerthread}}(\textcolor{keywordtype}{size\_t} taskCapacity)}
+\DoxyCodeLine{33         : mTaskQueue(taskCapacity)\{}
+\DoxyCodeLine{34             mThread = std::thread(\&workerthread::process, \textcolor{keyword}{this});}
+\DoxyCodeLine{35         \}}
+\DoxyCodeLine{36 }
+\DoxyCodeLine{41         \textcolor{keywordtype}{void} \mbox{\hyperlink{classworkshop_1_1workerthread_ae82378847b95b4c99e135fa4863f1156}{join}}() noexcept \{}
+\DoxyCodeLine{42             \textcolor{keywordflow}{if} (!mIsJoined)\{}
+\DoxyCodeLine{43                 \textcolor{comment}{// Writing an empty message means stop}}
+\DoxyCodeLine{44                 mTaskQueue.write(\{\});}
+\DoxyCodeLine{45                 mThread.join();}
+\DoxyCodeLine{46                 mIsJoined = \textcolor{keyword}{true};}
+\DoxyCodeLine{47             \}}
+\DoxyCodeLine{48         \}}
+\DoxyCodeLine{49 }
+\DoxyCodeLine{50         \textcolor{comment}{/* *}}
+\DoxyCodeLine{51 \textcolor{comment}{         * Block until all tasks are executed}}
+\DoxyCodeLine{52 \textcolor{comment}{         */}}
+\DoxyCodeLine{53         \textcolor{keywordtype}{void} sync() \{}
+\DoxyCodeLine{54             mTaskQueue.waitUntilEmpty();}
+\DoxyCodeLine{55         \}}
+\DoxyCodeLine{56 }
+\DoxyCodeLine{62         \textcolor{keywordtype}{void} \mbox{\hyperlink{classworkshop_1_1workerthread_afbf4988f2372bf9f5a925b3a86326adc}{postTask}}(Task\&\& task, Args\&\&... args) \{}
+\DoxyCodeLine{63             \textcolor{keyword}{auto} f = std::function<void(Args...)>(std::forward<Task>(task));}
+\DoxyCodeLine{64             mTaskQueue.write(std::make\_tuple(f, std::forward<Args>(args)...));}
+\DoxyCodeLine{65         \}}
+\DoxyCodeLine{66 }
+\DoxyCodeLine{67 }
+\DoxyCodeLine{68         \textcolor{keywordtype}{bool} full() \{}
+\DoxyCodeLine{69             \textcolor{keywordflow}{return} mTaskQueue.\mbox{\hyperlink{classworkshop_1_1messagebuffer_acfa8b5ee8793568b096c455b52c0ad1c}{full}}();}
+\DoxyCodeLine{70         \}}
+\DoxyCodeLine{71 }
+\DoxyCodeLine{76         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classworkshop_1_1workerthread_adb0042aa839e36dd226bd5a0f8558b4f}{joinable}}() const noexcept \{}
+\DoxyCodeLine{77             \textcolor{keywordflow}{return} !mIsJoined;}
+\DoxyCodeLine{78         \}}
+\DoxyCodeLine{79 }
+\DoxyCodeLine{80         \mbox{\hyperlink{classworkshop_1_1workerthread_ad3ef58ec12a15302256367ebbe0829aa}{workerthread}}(\mbox{\hyperlink{classworkshop_1_1workerthread}{workerthread}}\&\&) = \textcolor{keywordflow}{default};}
+\DoxyCodeLine{81 }
+\DoxyCodeLine{82         \mbox{\hyperlink{classworkshop_1_1workerthread}{\string~workerthread}}() \{}
+\DoxyCodeLine{83             mIsStopped = \textcolor{keyword}{true};}
+\DoxyCodeLine{84             mTaskQueue.\mbox{\hyperlink{classworkshop_1_1messagebuffer_a36b0d7c4f1b0cfbe3badecd9dbf06320}{unblock}}();}
+\DoxyCodeLine{85             \textcolor{keywordflow}{if} (mThread.joinable()) \{}
+\DoxyCodeLine{86                 mThread.join();}
+\DoxyCodeLine{87             \}}
+\DoxyCodeLine{88         \}}
+\DoxyCodeLine{89 }
+\DoxyCodeLine{90     \textcolor{keyword}{private}:}
+\DoxyCodeLine{91 }
+\DoxyCodeLine{92         \textcolor{keyword}{using} Message = std::optional<std::tuple<Task, Args...>>;}
+\DoxyCodeLine{93 }
+\DoxyCodeLine{94         \textcolor{comment}{/* *}}
+\DoxyCodeLine{95 \textcolor{comment}{         * the main processing loop}}
+\DoxyCodeLine{96 \textcolor{comment}{         */}}
+\DoxyCodeLine{97         \textcolor{keywordtype}{void} process() \{}
+\DoxyCodeLine{98             mIsStopped = \textcolor{keyword}{false};}
+\DoxyCodeLine{99 }
+\DoxyCodeLine{100             \textcolor{keywordflow}{while}(!mIsStopped) \{}
+\DoxyCodeLine{101                 \textcolor{keyword}{auto} message = mTaskQueue.read();}
+\DoxyCodeLine{102                 \textcolor{keywordflow}{if} (mIsStopped) \textcolor{keywordflow}{break}; \textcolor{comment}{// forcibly stopped}}
+\DoxyCodeLine{103                 \textcolor{keywordflow}{if} (!message) \textcolor{keywordflow}{break}; \textcolor{comment}{// the read was unblocked}}
+\DoxyCodeLine{104                 \textcolor{keywordflow}{if} (!*message) \textcolor{keywordflow}{break}; \textcolor{comment}{// a stop message was sent}}
+\DoxyCodeLine{105                 \textcolor{keyword}{auto} execute = [](Task t, Args... args) \{}
+\DoxyCodeLine{106                     t(args...);}
+\DoxyCodeLine{107                 \};}
+\DoxyCodeLine{108                 std::apply(execute, **message);}
+\DoxyCodeLine{109             \}}
+\DoxyCodeLine{110         \}}
+\DoxyCodeLine{111 }
+\DoxyCodeLine{112         \textcolor{keywordtype}{bool} mIsJoined \{\textcolor{keyword}{false}\};}
+\DoxyCodeLine{113         std::atomic<bool> mIsStopped \{\textcolor{keyword}{true}\};}
+\DoxyCodeLine{114         std::thread mThread;}
+\DoxyCodeLine{115         messagebuffer<Message> mTaskQueue;}
+\DoxyCodeLine{116     \};}
+\DoxyCodeLine{117 \};}
+
+\end{DoxyCode}

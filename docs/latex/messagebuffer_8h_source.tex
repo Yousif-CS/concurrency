@@ -1,0 +1,214 @@
+\hypertarget{messagebuffer_8h_source}{}\doxysection{messagebuffer.\+h}
+\label{messagebuffer_8h_source}\index{include/concurrency/messagebuffer.h@{include/concurrency/messagebuffer.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{comment}{/* *}}
+\DoxyCodeLine{2 \textcolor{comment}{ * Written by Yousif on 30th Jan 2021.}}
+\DoxyCodeLine{3 \textcolor{comment}{ * A Message buffer; A thread safe buffer for that supports multiple readers and writers}}
+\DoxyCodeLine{4 \textcolor{comment}{ * */}}
+\DoxyCodeLine{5 }
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#pragma once}}
+\DoxyCodeLine{7 }
+\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <condition\_variable>}}
+\DoxyCodeLine{9 \textcolor{preprocessor}{\#include <mutex>}}
+\DoxyCodeLine{10 \textcolor{preprocessor}{\#include <thread>}}
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#include <optional>}}
+\DoxyCodeLine{12 }
+\DoxyCodeLine{13 \textcolor{preprocessor}{\#include <boost/circular\_buffer.hpp>}}
+\DoxyCodeLine{14 }
+\DoxyCodeLine{15 \textcolor{keyword}{namespace }workshop \{}
+\DoxyCodeLine{16 }
+\DoxyCodeLine{17     \textcolor{keyword}{using} duration = std::chrono::duration<int,std::milli>;}
+\DoxyCodeLine{18     \textcolor{keyword}{static} \textcolor{keyword}{constexpr} \textcolor{keyword}{auto} DEFAULT\_CAPACITY = 10;}
+\DoxyCodeLine{19 }
+\DoxyCodeLine{20     \textcolor{keyword}{template} <\textcolor{keyword}{typename} T>}
+\DoxyCodeLine{21     \textcolor{keyword}{class }\mbox{\hyperlink{classworkshop_1_1messagebuffer}{messagebuffer}}}
+\DoxyCodeLine{22     \{}
+\DoxyCodeLine{23     \textcolor{keyword}{public}:}
+\DoxyCodeLine{24         \mbox{\hyperlink{classworkshop_1_1messagebuffer}{messagebuffer}}(\textcolor{keywordtype}{size\_t} capacity)}
+\DoxyCodeLine{25         : mCapacity(capacity), mBuffer(capacity)}
+\DoxyCodeLine{26         \{\}}
+\DoxyCodeLine{27 }
+\DoxyCodeLine{28         \mbox{\hyperlink{classworkshop_1_1messagebuffer}{messagebuffer}}()}
+\DoxyCodeLine{29         : \mbox{\hyperlink{classworkshop_1_1messagebuffer}{messagebuffer}}(DEFAULT\_CAPACITY)}
+\DoxyCodeLine{30         \{\}}
+\DoxyCodeLine{31 }
+\DoxyCodeLine{32         \textcolor{comment}{/* *}}
+\DoxyCodeLine{33 \textcolor{comment}{         * Read a message from the message queue. Blocks if there are}}
+\DoxyCodeLine{34 \textcolor{comment}{         * no messages yet.}}
+\DoxyCodeLine{35 \textcolor{comment}{         * @return an optional object containing T, depending on whether unblock}}
+\DoxyCodeLine{36 \textcolor{comment}{         * was called or not}}
+\DoxyCodeLine{37 \textcolor{comment}{         */}}
+\DoxyCodeLine{38 }
+\DoxyCodeLine{39         std::optional<T> read() \{}
+\DoxyCodeLine{40             std::unique\_lock<std::mutex> lock(mMutex);}
+\DoxyCodeLine{41 }
+\DoxyCodeLine{42             \textcolor{keywordflow}{if} (!mKill \&\& mBuffer.size() == 0) \{}
+\DoxyCodeLine{43                 mCvRead.wait(lock, [\&]()\{ \textcolor{keywordflow}{return} mKill || mBuffer.size() > 0; \});}
+\DoxyCodeLine{44 }
+\DoxyCodeLine{45                 \textcolor{keywordflow}{if} (mKill) \textcolor{keywordflow}{return} \{\};}
+\DoxyCodeLine{46             \}}
+\DoxyCodeLine{47 }
+\DoxyCodeLine{48             \textcolor{keyword}{auto} element = mBuffer.front();}
+\DoxyCodeLine{49             mBuffer.pop\_front();}
+\DoxyCodeLine{50 }
+\DoxyCodeLine{51             \textcolor{keywordflow}{if} (mBuffer.size() == mCapacity -\/ 1) \{}
+\DoxyCodeLine{52                 mCvWrite.notify\_one();}
+\DoxyCodeLine{53             \}}
+\DoxyCodeLine{54 }
+\DoxyCodeLine{55             \textcolor{keywordflow}{if} (mBuffer.empty()) \{}
+\DoxyCodeLine{56                 mCvEmpty.notify\_all();}
+\DoxyCodeLine{57             \}}
+\DoxyCodeLine{58 }
+\DoxyCodeLine{59             \textcolor{keywordflow}{return} element;}
+\DoxyCodeLine{60         \}}
+\DoxyCodeLine{61 }
+\DoxyCodeLine{62         \textcolor{comment}{/* *}}
+\DoxyCodeLine{63 \textcolor{comment}{         * Write a message to the buffer. Blocks if the buffer is full}}
+\DoxyCodeLine{64 \textcolor{comment}{         * @param message The message to be written}}
+\DoxyCodeLine{65 \textcolor{comment}{         */}}
+\DoxyCodeLine{66         \textcolor{keywordtype}{void} write(T message) \{}
+\DoxyCodeLine{67             std::unique\_lock<std::mutex> lock(mMutex);}
+\DoxyCodeLine{68 }
+\DoxyCodeLine{69             \textcolor{comment}{// Calling this function means you want}}
+\DoxyCodeLine{70             \textcolor{comment}{// to restore the buffer into a usable state}}
+\DoxyCodeLine{71             \textcolor{keywordflow}{if} (mKill) mKill = \textcolor{keyword}{false};}
+\DoxyCodeLine{72 }
+\DoxyCodeLine{73             \textcolor{keywordflow}{if} (mBuffer.size() == mCapacity) \{}
+\DoxyCodeLine{74                 mCvWrite.wait(lock, [\textcolor{keyword}{this}]() \{ \textcolor{keywordflow}{return} mBuffer.size() < mCapacity; \});}
+\DoxyCodeLine{75             \}}
+\DoxyCodeLine{76 }
+\DoxyCodeLine{77             mBuffer.push\_back(std::move(message));}
+\DoxyCodeLine{78 }
+\DoxyCodeLine{79             \textcolor{keywordflow}{if} (mBuffer.size() == 1) \{}
+\DoxyCodeLine{80                 mCvRead.notify\_one();}
+\DoxyCodeLine{81             \}}
+\DoxyCodeLine{82         \}}
+\DoxyCodeLine{83 }
+\DoxyCodeLine{84 }
+\DoxyCodeLine{85         \textcolor{comment}{/* *}}
+\DoxyCodeLine{86 \textcolor{comment}{         * Write a message to the buffer. Blocks for a duration}}
+\DoxyCodeLine{87 \textcolor{comment}{         * if the buffer is full.}}
+\DoxyCodeLine{88 \textcolor{comment}{         * @param message The message to be written}}
+\DoxyCodeLine{89 \textcolor{comment}{         * @param timeout The timeout to wait before unblocking}}
+\DoxyCodeLine{90 \textcolor{comment}{         * @return whether the write was successful or not}}
+\DoxyCodeLine{91 \textcolor{comment}{         */}}
+\DoxyCodeLine{92         \textcolor{keywordtype}{bool} write(T message, duration timeout) \{}
+\DoxyCodeLine{93             std::unique\_lock<std::mutex> lock(mMutex);}
+\DoxyCodeLine{94 }
+\DoxyCodeLine{95             \textcolor{comment}{// Calling this function means you want}}
+\DoxyCodeLine{96             \textcolor{comment}{// to restore the buffer into a usable state}}
+\DoxyCodeLine{97             \textcolor{keywordflow}{if} (mKill) mKill = \textcolor{keyword}{false};}
+\DoxyCodeLine{98 }
+\DoxyCodeLine{99             \textcolor{keywordflow}{if} (mBuffer.size() == mCapacity) \{}
+\DoxyCodeLine{100                 \textcolor{keyword}{auto} spaceAvailable = mCvWrite.wait\_for(lock, timeout, [\textcolor{keyword}{this}]() \{ \textcolor{keywordflow}{return} mBuffer.size() < mCapacity; \});}
+\DoxyCodeLine{101 }
+\DoxyCodeLine{102                 \textcolor{keywordflow}{if}(!spaceAvailable) \textcolor{keywordflow}{return} \textcolor{keyword}{false};}
+\DoxyCodeLine{103             \}}
+\DoxyCodeLine{104 }
+\DoxyCodeLine{105             mBuffer.push\_back(std::move(message));}
+\DoxyCodeLine{106 }
+\DoxyCodeLine{107             \textcolor{keywordflow}{if} (mBuffer.size() == 1) \{}
+\DoxyCodeLine{108                 mCvRead.notify\_one();}
+\DoxyCodeLine{109             \}}
+\DoxyCodeLine{110 }
+\DoxyCodeLine{111             \textcolor{keywordflow}{return} \textcolor{keyword}{true};}
+\DoxyCodeLine{112         \}}
+\DoxyCodeLine{113 }
+\DoxyCodeLine{114         \textcolor{comment}{/* *}}
+\DoxyCodeLine{115 \textcolor{comment}{         * Read a message. Blocks temporarily if the buffer is empty.}}
+\DoxyCodeLine{116 \textcolor{comment}{         * If unblock() is called, this read operation will unblock}}
+\DoxyCodeLine{117 \textcolor{comment}{         * @param timeout The timeout to block for if the buffer is empty}}
+\DoxyCodeLine{118 \textcolor{comment}{         * @returns an optional value T.}}
+\DoxyCodeLine{119 \textcolor{comment}{         */}}
+\DoxyCodeLine{120         std::optional<T> read(duration timeout)\{}
+\DoxyCodeLine{121             std::unique\_lock<std::mutex> lock(mMutex);}
+\DoxyCodeLine{122 }
+\DoxyCodeLine{123             \textcolor{keywordflow}{if} (mBuffer.size() == 0) \{}
+\DoxyCodeLine{124                 \textcolor{keyword}{auto} dataAvailable = mCvRead.wait\_for(lock, timeout, [\textcolor{keyword}{this}]()\{ \textcolor{keywordflow}{return} mBuffer.size() > 0; \});}
+\DoxyCodeLine{125 }
+\DoxyCodeLine{126                 \textcolor{keywordflow}{if} (!dataAvailable) \{}
+\DoxyCodeLine{127                     \textcolor{keywordflow}{return} \{\};}
+\DoxyCodeLine{128                 \}}
+\DoxyCodeLine{129             \}}
+\DoxyCodeLine{130 }
+\DoxyCodeLine{131             \textcolor{keyword}{auto} element = mBuffer.front();}
+\DoxyCodeLine{132             mBuffer.pop\_front();}
+\DoxyCodeLine{133 }
+\DoxyCodeLine{134             \textcolor{keywordflow}{if} (mBuffer.size() == mCapacity -\/ 1) \{}
+\DoxyCodeLine{135                 mCvWrite.notify\_one();}
+\DoxyCodeLine{136             \}}
+\DoxyCodeLine{137 }
+\DoxyCodeLine{138             \textcolor{keywordflow}{if} (mBuffer.empty()) \{}
+\DoxyCodeLine{139                 mCvEmpty.notify\_all();}
+\DoxyCodeLine{140             \}}
+\DoxyCodeLine{141 }
+\DoxyCodeLine{142             \textcolor{keywordflow}{return} element;}
+\DoxyCodeLine{143         \}}
+\DoxyCodeLine{144 }
+\DoxyCodeLine{145         \textcolor{comment}{/* *}}
+\DoxyCodeLine{146 \textcolor{comment}{         * @return the number of elements in the buffer}}
+\DoxyCodeLine{147 \textcolor{comment}{         */}}
+\DoxyCodeLine{148         \textcolor{keywordtype}{size\_t} size()\textcolor{keyword}{ const }\{}
+\DoxyCodeLine{149             std::unique\_lock<std::mutex> lock(mMutex);}
+\DoxyCodeLine{150             \textcolor{keywordflow}{return} mBuffer.size();}
+\DoxyCodeLine{151         \}}
+\DoxyCodeLine{152 }
+\DoxyCodeLine{153         \textcolor{comment}{/* *}}
+\DoxyCodeLine{154 \textcolor{comment}{         * @return whether the buffer is empty.}}
+\DoxyCodeLine{155 \textcolor{comment}{         */}}
+\DoxyCodeLine{156         \textcolor{keywordtype}{bool} empty()\textcolor{keyword}{ const }\{}
+\DoxyCodeLine{157             std::unique\_lock<std::mutex> lock(mMutex);}
+\DoxyCodeLine{158             \textcolor{keywordflow}{return} mBuffer.empty();}
+\DoxyCodeLine{159         \}}
+\DoxyCodeLine{160 }
+\DoxyCodeLine{164         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classworkshop_1_1messagebuffer_acfa8b5ee8793568b096c455b52c0ad1c}{full}}()\textcolor{keyword}{ const }\{}
+\DoxyCodeLine{165             std::unique\_lock<std::mutex> lock(mMutex);}
+\DoxyCodeLine{166             \textcolor{keywordflow}{return} mBuffer.full();}
+\DoxyCodeLine{167         \}}
+\DoxyCodeLine{168 }
+\DoxyCodeLine{169         \textcolor{comment}{/*}}
+\DoxyCodeLine{170 \textcolor{comment}{         * Wait until the buffer is empty, i.e. until drained}}
+\DoxyCodeLine{171 \textcolor{comment}{         * */}}
+\DoxyCodeLine{172         \textcolor{keywordtype}{void} waitUntilEmpty () \{}
+\DoxyCodeLine{173             std::unique\_lock<std::mutex> lock(mMutex);}
+\DoxyCodeLine{174             \textcolor{keywordflow}{if} (mBuffer.empty()) \textcolor{keywordflow}{return}; \textcolor{comment}{// if already empty, just return}}
+\DoxyCodeLine{175             mCvEmpty.wait(lock, [\textcolor{keyword}{this}]() \{ \textcolor{keywordflow}{return} mBuffer.empty(); \});}
+\DoxyCodeLine{176         \}}
+\DoxyCodeLine{177 }
+\DoxyCodeLine{182         \textcolor{keywordtype}{void} \mbox{\hyperlink{classworkshop_1_1messagebuffer_a36b0d7c4f1b0cfbe3badecd9dbf06320}{unblock}}() \{}
+\DoxyCodeLine{183             std::unique\_lock<std::mutex> lock(mMutex);}
+\DoxyCodeLine{184             mKill = \textcolor{keyword}{true};}
+\DoxyCodeLine{185             mCvRead.notify\_all();}
+\DoxyCodeLine{186         \}}
+\DoxyCodeLine{187 }
+\DoxyCodeLine{188         \mbox{\hyperlink{classworkshop_1_1messagebuffer}{messagebuffer}}(\mbox{\hyperlink{classworkshop_1_1messagebuffer}{messagebuffer<T>}}\&\& mb) \{}
+\DoxyCodeLine{189             std::unique\_lock<std::mutex> lock(mb.mMutex);}
+\DoxyCodeLine{190             mBuffer = std::move(mb.mBuffer);}
+\DoxyCodeLine{191             mCapacity = mb.mCapacity;}
+\DoxyCodeLine{192             mKill = mb.mKill;}
+\DoxyCodeLine{193         \}}
+\DoxyCodeLine{194 }
+\DoxyCodeLine{195         messagebuffer(\textcolor{keyword}{const} messagebuffer<T>\& mb) \{}
+\DoxyCodeLine{196             std::unique\_lock<std::mutex> lock(mb.mMutex);}
+\DoxyCodeLine{197             mBuffer = mb.mBuffer;}
+\DoxyCodeLine{198             mCapacity = mb.mCapacity;}
+\DoxyCodeLine{199             mKill = mb.mKill;}
+\DoxyCodeLine{200         \}}
+\DoxyCodeLine{201 }
+\DoxyCodeLine{202     \textcolor{keyword}{private}:}
+\DoxyCodeLine{203 }
+\DoxyCodeLine{204         \textcolor{keywordtype}{bool} mKill\{\textcolor{keyword}{false}\};}
+\DoxyCodeLine{205         \textcolor{keyword}{const} \textcolor{keywordtype}{size\_t} mCapacity;}
+\DoxyCodeLine{206         \textcolor{keyword}{mutable} std::mutex mMutex;}
+\DoxyCodeLine{207         std::condition\_variable mCvRead;}
+\DoxyCodeLine{208         std::condition\_variable mCvWrite;}
+\DoxyCodeLine{209         std::condition\_variable mCvEmpty;}
+\DoxyCodeLine{210         boost::circular\_buffer<T> mBuffer;}
+\DoxyCodeLine{211     \};}
+\DoxyCodeLine{212 \}}
+\DoxyCodeLine{213 }
+\DoxyCodeLine{214 }
+\DoxyCodeLine{215 }
+
+\end{DoxyCode}

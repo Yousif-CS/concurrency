@@ -1,0 +1,76 @@
+\hypertarget{classworkshop_1_1workerthread}{}\doxysection{workshop\+::workerthread\texorpdfstring{$<$}{<} Task, Args \texorpdfstring{$>$}{>} Class Template Reference}
+\label{classworkshop_1_1workerthread}\index{workshop::workerthread$<$ Task, Args $>$@{workshop::workerthread$<$ Task, Args $>$}}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classworkshop_1_1workerthread_ad3ef58ec12a15302256367ebbe0829aa}{workerthread}} (size\+\_\+t task\+Capacity)
+\item 
+void \mbox{\hyperlink{classworkshop_1_1workerthread_ae82378847b95b4c99e135fa4863f1156}{join}} () noexcept
+\item 
+\mbox{\Hypertarget{classworkshop_1_1workerthread_a1b665428c733a5f273aa2e34e5e9a729}\label{classworkshop_1_1workerthread_a1b665428c733a5f273aa2e34e5e9a729}} 
+void {\bfseries sync} ()
+\item 
+void \mbox{\hyperlink{classworkshop_1_1workerthread_afbf4988f2372bf9f5a925b3a86326adc}{post\+Task}} (Task \&\&task, Args \&\&... args)
+\item 
+\mbox{\Hypertarget{classworkshop_1_1workerthread_a2303e8877ca36a2694f928ba8327947d}\label{classworkshop_1_1workerthread_a2303e8877ca36a2694f928ba8327947d}} 
+bool {\bfseries full} ()
+\item 
+bool \mbox{\hyperlink{classworkshop_1_1workerthread_adb0042aa839e36dd226bd5a0f8558b4f}{joinable}} () const noexcept
+\item 
+\mbox{\Hypertarget{classworkshop_1_1workerthread_ac9f0959cc0d7bded45d0b4d5d347a41d}\label{classworkshop_1_1workerthread_ac9f0959cc0d7bded45d0b4d5d347a41d}} 
+{\bfseries workerthread} (\mbox{\hyperlink{classworkshop_1_1workerthread}{workerthread}} \&\&)=default
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classworkshop_1_1workerthread_ad3ef58ec12a15302256367ebbe0829aa}\label{classworkshop_1_1workerthread_ad3ef58ec12a15302256367ebbe0829aa}} 
+\index{workshop::workerthread$<$ Task, Args $>$@{workshop::workerthread$<$ Task, Args $>$}!workerthread@{workerthread}}
+\index{workerthread@{workerthread}!workshop::workerthread$<$ Task, Args $>$@{workshop::workerthread$<$ Task, Args $>$}}
+\doxysubsubsection{\texorpdfstring{workerthread()}{workerthread()}}
+{\footnotesize\ttfamily template$<$typename Task , typename... Args$>$ \\
+\mbox{\hyperlink{classworkshop_1_1workerthread}{workshop\+::workerthread}}$<$ Task, Args $>$\+::workerthread (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{task\+Capacity }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [explicit]}}
+
+Construct a workerthread 
+\begin{DoxyParams}{Parameters}
+{\em task\+Capacity} & the number of tasks the thread can hold before blocking \\
+\hline
+\end{DoxyParams}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classworkshop_1_1workerthread_ae82378847b95b4c99e135fa4863f1156}\label{classworkshop_1_1workerthread_ae82378847b95b4c99e135fa4863f1156}} 
+\index{workshop::workerthread$<$ Task, Args $>$@{workshop::workerthread$<$ Task, Args $>$}!join@{join}}
+\index{join@{join}!workshop::workerthread$<$ Task, Args $>$@{workshop::workerthread$<$ Task, Args $>$}}
+\doxysubsubsection{\texorpdfstring{join()}{join()}}
+{\footnotesize\ttfamily template$<$typename Task , typename... Args$>$ \\
+void \mbox{\hyperlink{classworkshop_1_1workerthread}{workshop\+::workerthread}}$<$ Task, Args $>$\+::join (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+Join the current thread pool. Joins all the threads in the workerthread \mbox{\Hypertarget{classworkshop_1_1workerthread_adb0042aa839e36dd226bd5a0f8558b4f}\label{classworkshop_1_1workerthread_adb0042aa839e36dd226bd5a0f8558b4f}} 
+\index{workshop::workerthread$<$ Task, Args $>$@{workshop::workerthread$<$ Task, Args $>$}!joinable@{joinable}}
+\index{joinable@{joinable}!workshop::workerthread$<$ Task, Args $>$@{workshop::workerthread$<$ Task, Args $>$}}
+\doxysubsubsection{\texorpdfstring{joinable()}{joinable()}}
+{\footnotesize\ttfamily template$<$typename Task , typename... Args$>$ \\
+bool \mbox{\hyperlink{classworkshop_1_1workerthread}{workshop\+::workerthread}}$<$ Task, Args $>$\+::joinable (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+Check whether the thread is in a joinable state \begin{DoxyReturn}{Returns}
+whether the thread is joinable or not. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classworkshop_1_1workerthread_afbf4988f2372bf9f5a925b3a86326adc}\label{classworkshop_1_1workerthread_afbf4988f2372bf9f5a925b3a86326adc}} 
+\index{workshop::workerthread$<$ Task, Args $>$@{workshop::workerthread$<$ Task, Args $>$}!postTask@{postTask}}
+\index{postTask@{postTask}!workshop::workerthread$<$ Task, Args $>$@{workshop::workerthread$<$ Task, Args $>$}}
+\doxysubsubsection{\texorpdfstring{postTask()}{postTask()}}
+{\footnotesize\ttfamily template$<$typename Task , typename... Args$>$ \\
+void \mbox{\hyperlink{classworkshop_1_1workerthread}{workshop\+::workerthread}}$<$ Task, Args $>$\+::post\+Task (\begin{DoxyParamCaption}\item[{Task \&\&}]{task,  }\item[{Args \&\&...}]{args }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Post a task to be executed asynchronously 
+\begin{DoxyParams}{Parameters}
+{\em task} & a callable with proper argument set \\
+\hline
+{\em args} & the arguments to call task with. \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+include/concurrency/workerthread.\+h\end{DoxyCompactItemize}

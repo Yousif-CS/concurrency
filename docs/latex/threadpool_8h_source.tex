@@ -1,0 +1,89 @@
+\hypertarget{threadpool_8h_source}{}\doxysection{threadpool.\+h}
+\label{threadpool_8h_source}\index{include/concurrency/threadpool.h@{include/concurrency/threadpool.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{comment}{/* *}}
+\DoxyCodeLine{2 \textcolor{comment}{ * threadpool; a thread that executes tasks posted in order.}}
+\DoxyCodeLine{3 \textcolor{comment}{ * Created by Yousif on Feb 13th 2022.}}
+\DoxyCodeLine{4 \textcolor{comment}{ * */}}
+\DoxyCodeLine{5 }
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#pragma once}}
+\DoxyCodeLine{7 }
+\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <thread>}}
+\DoxyCodeLine{9 \textcolor{preprocessor}{\#include <tuple>}}
+\DoxyCodeLine{10 \textcolor{preprocessor}{\#include <utility>}}
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#include <atomic>}}
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#include <chrono>}}
+\DoxyCodeLine{13 \textcolor{preprocessor}{\#include <vector>}}
+\DoxyCodeLine{14 \textcolor{preprocessor}{\#include <algorithm>}}
+\DoxyCodeLine{15 }
+\DoxyCodeLine{16 \textcolor{preprocessor}{\#include "{}workerthread.h"{}}}
+\DoxyCodeLine{17 \textcolor{preprocessor}{\#include "{}messagebuffer.h"{}}}
+\DoxyCodeLine{18 }
+\DoxyCodeLine{19 \textcolor{keyword}{namespace }workshop \{}
+\DoxyCodeLine{20 }
+\DoxyCodeLine{21     \textcolor{keyword}{using namespace }std::chrono\_literals;}
+\DoxyCodeLine{22 }
+\DoxyCodeLine{23     \textcolor{keyword}{template}<\textcolor{keyword}{typename} T>}
+\DoxyCodeLine{24     \textcolor{keyword}{using} up = std::unique\_ptr<T>;}
+\DoxyCodeLine{25 }
+\DoxyCodeLine{26     \textcolor{keyword}{template} <\textcolor{keyword}{typename} Task, \textcolor{keyword}{typename}... Args>}
+\DoxyCodeLine{27     \textcolor{keyword}{class }\mbox{\hyperlink{classworkshop_1_1threadpool}{threadpool}} \{}
+\DoxyCodeLine{28     \textcolor{keyword}{public}:}
+\DoxyCodeLine{29 }
+\DoxyCodeLine{36         \mbox{\hyperlink{classworkshop_1_1threadpool_ae2f5e783f388480c816bb836019c9714}{threadpool}}(\textcolor{keywordtype}{size\_t} taskCapacity, \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{int} numThreads)}
+\DoxyCodeLine{37         \{}
+\DoxyCodeLine{38             \textcolor{keyword}{using} \mbox{\hyperlink{classworkshop_1_1workerthread}{workerthread}} = \mbox{\hyperlink{classworkshop_1_1workerthread}{workerthread}}<Task, Args...>;}
+\DoxyCodeLine{39             \textcolor{keyword}{auto} nThreads = std::min(numThreads, std::thread::hardware\_concurrency());}
+\DoxyCodeLine{40             \textcolor{keyword}{auto} tasksPerThread = taskCapacity / nThreads;}
+\DoxyCodeLine{41             \textcolor{comment}{//mThreads = std::vector<workerthread>(nThreads, std::make\_unique<workerthread>(tasksPerThread));}}
+\DoxyCodeLine{42             mThreads.reserve(nThreads);}
+\DoxyCodeLine{43             \textcolor{keywordflow}{for}(\textcolor{keyword}{auto} i = 0; i < nThreads; i++)\{}
+\DoxyCodeLine{44                 mThreads.push\_back(std::make\_unique<workerthread>(tasksPerThread));}
+\DoxyCodeLine{45             \}}
+\DoxyCodeLine{46         \}}
+\DoxyCodeLine{47 }
+\DoxyCodeLine{48         \mbox{\hyperlink{classworkshop_1_1threadpool_ae2f5e783f388480c816bb836019c9714}{threadpool}}(\textcolor{keywordtype}{size\_t} taskCapacity)}
+\DoxyCodeLine{49         : \mbox{\hyperlink{classworkshop_1_1threadpool}{threadpool}}(taskCapacity, std::thread::hardware\_concurrency())\{\}}
+\DoxyCodeLine{50 }
+\DoxyCodeLine{54         \textcolor{keywordtype}{void} \mbox{\hyperlink{classworkshop_1_1threadpool_ab2babab86813def296938c6260959f91}{sync}}() noexcept \{}
+\DoxyCodeLine{55             \textcolor{keywordflow}{for}(\textcolor{keyword}{auto}\& worker: mThreads) \{}
+\DoxyCodeLine{56                 worker-\/>sync();}
+\DoxyCodeLine{57             \}}
+\DoxyCodeLine{58         \}}
+\DoxyCodeLine{59 }
+\DoxyCodeLine{65         \textcolor{keywordtype}{void} \mbox{\hyperlink{classworkshop_1_1threadpool_a31da57b6366a24ac1bb072e237916eac}{postTask}}(Task\&\& task, Args\&\&... args) \{}
+\DoxyCodeLine{66             \textcolor{keywordflow}{for}(\textcolor{keywordtype}{size\_t} i = 0; i < mThreads.size() \&\& mThreads[mRoundRobinIdx]-\/>full(); i++) \{}
+\DoxyCodeLine{67                 mRoundRobinIdx = (mRoundRobinIdx + 1) \% mThreads.size();}
+\DoxyCodeLine{68             \}}
+\DoxyCodeLine{69             mThreads[mRoundRobinIdx]-\/>postTask(std::forward<Task>(task), std::forward<Args>(args)...);}
+\DoxyCodeLine{70             mRoundRobinIdx = (mRoundRobinIdx + 1) \% mThreads.size();}
+\DoxyCodeLine{71         \}}
+\DoxyCodeLine{72 }
+\DoxyCodeLine{77         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classworkshop_1_1threadpool_a19865f1fc2055aeceb3d6ecad510c594}{joinable}}()\textcolor{keyword}{ const }\{}
+\DoxyCodeLine{78             \textcolor{keywordflow}{return} !mIsJoined;}
+\DoxyCodeLine{79         \}}
+\DoxyCodeLine{80 }
+\DoxyCodeLine{84         \textcolor{keywordtype}{void} \mbox{\hyperlink{classworkshop_1_1threadpool_a6b37df7129db05278b2170e0275ee44b}{join}}() noexcept \{}
+\DoxyCodeLine{85             \textcolor{keywordflow}{if} (!mIsJoined) \{}
+\DoxyCodeLine{86                 \textcolor{keywordflow}{for}(\textcolor{keyword}{auto}\& worker: mThreads) \{}
+\DoxyCodeLine{87                     \textcolor{keywordflow}{if} (worker-\/>joinable()) \{}
+\DoxyCodeLine{88                         worker-\/>join();}
+\DoxyCodeLine{89                     \}}
+\DoxyCodeLine{90                 \}}
+\DoxyCodeLine{91                 mIsJoined = \textcolor{keyword}{true};}
+\DoxyCodeLine{92             \}}
+\DoxyCodeLine{93         \}}
+\DoxyCodeLine{94 }
+\DoxyCodeLine{95         \mbox{\hyperlink{classworkshop_1_1threadpool}{\string~threadpool}}() \{}
+\DoxyCodeLine{96             \mbox{\hyperlink{classworkshop_1_1threadpool_a6b37df7129db05278b2170e0275ee44b}{join}}();}
+\DoxyCodeLine{97         \}}
+\DoxyCodeLine{98 }
+\DoxyCodeLine{99     \textcolor{keyword}{private}:}
+\DoxyCodeLine{100         \textcolor{keywordtype}{size\_t} mRoundRobinIdx = 0;}
+\DoxyCodeLine{101         \textcolor{keywordtype}{bool} mIsJoined \{\textcolor{keyword}{false}\};}
+\DoxyCodeLine{102         std::vector<up<workerthread<Task, Args...>>> mThreads;}
+\DoxyCodeLine{103     \};}
+\DoxyCodeLine{104 \};}
+
+\end{DoxyCode}
