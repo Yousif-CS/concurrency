@@ -37,3 +37,8 @@ add_executable(example)
 
 target_link_libraries(example concurrency)
 ```
+
+## Talk
+This repo is used for the following talk:
+* CMake: How to Build and Package C/C++ Projects https://www.youtube.com/watch?v=AJRGU_XgVMQ
+* Slides: https://docs.google.com/presentation/...
